@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PromptPix PRO - Zero-Cost Art & Prompt Engine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #090a0f;
+      --card-bg: #12141c;
+      --accent: #6366f1;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --border: rgba(255, 255, 255, 0.08);
+      --gold: #f59e0b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+    body { background-color: var(--bg); color: var(--text); padding-bottom: 80px; }
+    
+    header {
+      position: sticky; top: 0; z-index: 40;
+      background: rgba(9, 10, 15, 0.9); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border); padding: 14px 20px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .logo { font-size: 1.25rem; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
+    .header-actions { display: flex; gap: 8px; }
+    .btn-header {
+      background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border);
+      color: var(--text); padding: 7px 12px; border-radius: 8px; font-size: 0.8rem;
+      font-weight: 600; cursor: pointer;
+    }
+
+    /* Viral Prompt of the Day Vault */
+    .vault-banner {
+      margin: 16px 20px 0 20px; background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(99, 102, 241, 0.15));
+      border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 14px; padding: 14px 16px;
+      display: flex; flex-direction: column; gap: 8px; position: relative; overflow: hidden;
+    }
+    .vault-title { font-size: 0.8rem; font-weight: 700; color: var(--gold); display: flex; align-items: center; gap: 6px; }
+    .vault-content { font-size: 0.85rem; color: #fff; filter: blur(5px); user-select: none; transition: 0.3s; }
+    .vault-btn {
+      align-self: flex-start; background: var(--gold); color: #000; border: none;
+      padding: 6px 14px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer;
+    }
+
+    .controls { padding: 16px 20px; display: flex; flex-direction: column; gap: 12px; }
+    .search-bar { display: flex; background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 4px; }
+    .search-bar input { flex: 1; background: transparent; border: none; padding: 10px 14px; color: var(--text); font-size: 0.95rem; outline: none; }
+    .search-bar button { background: var(--accent); color: white; border: none; padding: 0 16px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+    
+    .categories { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; }
+    .categories::-webkit-scrollbar { display: none; }
+    .cat-chip {
+      background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border);
+      color: var(--text-muted); padding: 6px 14px; border-radius: 20px; font-size: 0.8rem;
+      white-space: nowrap; cursor: pointer; font-weight: 500;
+    }
+    .cat-chip.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+    .grid { column-count: 2; column-gap: 14px; padding: 0 20px; }
+    @media(min-width: 768px) { .grid { column-count: 3; } }
+    @media(min-width: 1024px) { .grid { column-count: 4; } }
+    
+    .card {
+      break-inside: avoid; background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: 14px; margin-bottom: 14px; overflow: hidden; display: flex; flex-direction: column;
+    }
+    .card-img-wrap { position: relative; width: 100%; cursor: pointer; }
+    .card-img-wrap img { width: 100%; display: block; object-fit: cover; }
+    .badge-fav {
+      position: absolute; top: 8px; right: 8px; background: rgba(0, 0, 0, 0.65);
+      border: none; color: white; font-size: 0.8rem; padding: 5px 7px; border-radius: 50%; cursor: pointer;
+    }
+    .card-body { padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+    .prompt-text {
+      font-size: 0.78rem; color: var(--text-muted); line-height: 1.35;
+      display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .card-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .btn-action {
+      background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border);
+      color: var(--text); padding: 7px 5px; border-radius: 6px; font-size: 0.75rem;
+      font-weight: 600; cursor: pointer; text-align: center; text-decoration: none;
+    }
+    .btn-action.primary { background: var(--accent); border-color: var(--accent); }
+
+    /* Affiliate / Sponsor Cards */
+    .sponsor-card {
+      break-inside: avoid; background: linear-gradient(135deg, #1e1b4b, #12141c);
+      border: 1px dashed var(--accent); border-radius: 14px; margin-bottom: 14px; padding: 16px;
+      display: flex; flex-direction: column; gap: 8px; text-align: center;
+    }
+    .sponsor-card h4 { font-size: 0.85rem; color: #a5b4fc; }
+    .sponsor-card p { font-size: 0.75rem; color: var(--text-muted); }
+
+    /* Modals */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(6px);
+      z-index: 50; display: none; align-items: center; justify-content: center; padding: 20px;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-box {
+      background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px;
+      width: 100%; max-width: 460px; padding: 20px; display: flex; flex-direction: column; gap: 12px;
+    }
+    .modal-box h3 { font-size: 1.05rem; }
+    .modal-box textarea {
+      width: 100%; height: 80px; background: rgba(0,0,0,0.3); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text); padding: 10px; font-size: 0.82rem; resize: none; outline: none;
+    }
+    .modal-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .modal-inputs input {
+      background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 8px;
+      padding: 8px 10px; color: var(--text); font-size: 0.78rem; outline: none;
+    }
+    .quick-links { display: flex; gap: 8px; margin-top: 4px; }
+    .btn-link {
+      flex: 1; text-align: center; background: rgba(255,255,255,0.06); border: 1px solid var(--border);
+      padding: 7px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; color: #38bdf8; text-decoration: none;
+    }
+    .btn-close {
+      background: transparent; border: 1px solid var(--border); color: var(--text-muted);
+      padding: 8px; border-radius: 8px; cursor: pointer; font-size: 0.8rem;
+    }
+    .crop-selector { display: flex; gap: 6px; }
+    .btn-crop {
+      flex: 1; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border);
+      color: #fff; padding: 6px; border-radius: 6px; font-size: 0.75rem; cursor: pointer;
+    }
+    .btn-crop.active { background: var(--accent); }
+    .ad-countdown { font-size: 2.2rem; font-weight: 800; color: var(--accent); text-align: center; margin: 10px 0; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo">PROMPTPIX</div>
+    <div class="header-actions">
+      <button class="btn-header" onclick="openGuide()">❓ Guide</button>
+      <button class="btn-header" onclick="triggerSurprise()">⚡ Surprise</button>
+      <button class="btn-header" onclick="showSaved()">⭐ Saved</button>
+    </div>
+  </header>
+
+  <!-- High-CTR Vault -->
+  <div class="vault-banner">
+    <div class="vault-title">🔒 SECRET VIRAL PROMPT OF THE DAY</div>
+    <div class="vault-content" id="vaultText">Cinematic 8k studio hyperrealistic portrait of futuristic sovereign, golden rim lighting, Hasselblad X2D 100C lens, vivid textures</div>
+    <button class="vault-btn" id="vaultBtn" onclick="unlockVault()">Unlock Secret Prompt (5s Ad)</button>
+  </div>
+
+  <div class="controls">
+    <div class="search-bar">
+      <input type="text" id="searchInput" placeholder="Search portraits, 3D cartoons, anime..." />
+      <button onclick="handleSearch()">Search</button>
+    </div>
+    <div class="categories">
+      <button class="cat-chip active" onclick="filterCategory(this, 'trending realistic portrait')">🔥 Realistic Portraits</button>
+      <button class="cat-chip" onclick="filterCategory(this, 'cute 3d disney pixar cartoon character')">🎨 3D Cartoons</button>
+      <button class="cat-chip" onclick="filterCategory(this, 'japanese anime character cinematic')">⚡ Anime</button>
+      <button class="cat-chip" onclick="filterCategory(this, 'candid street photography')">📸 Candid Real</button>
+      <button class="cat-chip" onclick="filterCategory(this, 'cyberpunk sci-fi character')">🚀 Cyberpunk</button>
+    </div>
+  </div>
+
+  <div class="grid" id="artGrid"></div>
+
+  <!-- Customizer Modal -->
+  <div class="modal-overlay" id="editModal">
+    <div class="modal-box">
+      <h3>Remix & Direct Generate</h3>
+      <textarea id="modalPrompt"></textarea>
+      <div class="modal-inputs">
+        <input type="text" id="swapName" placeholder="Replace subject..." oninput="updateCustomPrompt()" />
+        <input type="text" id="swapColor" placeholder="Change color/style..." oninput="updateCustomPrompt()" />
+      </div>
+      <button class="btn-action primary" style="padding: 10px;" onclick="copyModalPrompt()">📋 Copy Customized Prompt</button>
+      <div style="font-size: 0.75rem; color: var(--text-muted);">Paste in free generation engines:</div>
+      <div class="quick-links">
+        <a class="btn-link" href="https://www.bing.com/images/create" target="_blank">Bing Image (Free) ↗</a>
+        <a class="btn-link" href="https://leonardo.ai" target="_blank">Leonardo AI ↗</a>
+      </div>
+      <button class="btn-close" onclick="closeModal('editModal')">Close</button>
+    </div>
+  </div>
+
+  <!-- Download & Resizer Modal -->
+  <div class="modal-overlay" id="downloadModal">
+    <div class="modal-box" style="text-align: center;">
+      <h3>Prepare HD Download</h3>
+      <p style="font-size: 0.75rem; color: var(--text-muted);">Choose aspect ratio (Auto-cropped by browser):</p>
+      
+      <div class="crop-selector">
+        <button class="btn-crop active" onclick="setRatio('original', this)">Original</button>
+        <button class="btn-crop" onclick="setRatio('1:1', this)">1:1 (DP)</button>
+        <button class="btn-crop" onclick="setRatio('9:16', this)">9:16 (Story)</button>
+      </div>
+
+      <!-- Sponsor Ad Slot -->
+      <div style="background: rgba(255,255,255,0.03); border: 1px dashed var(--border); padding: 12px; border-radius: 8px; font-size: 0.75rem; color: #64748b; margin-top: 8px;">
+        [ High-Paying Ad Script Placed Here ]
+      </div>
+
+      <div class="ad-countdown" id="adTimer">5</div>
+      <button id="finalDlBtn" class="btn-action primary" style="display: none; padding: 10px; width: 100%;" onclick="executeDownload()">⬇ Download Cropped File</button>
+      <button class="btn-close" onclick="closeModal('downloadModal')">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Universal Ad Trigger Modal (For Copy Limit) -->
+  <div class="modal-overlay" id="adGateModal">
+    <div class="modal-box" style="text-align: center;">
+      <h3>Sponsor Message</h3>
+      <p style="font-size: 0.78rem; color: var(--text-muted);">Prompt ready. Clipboard unlocks in:</p>
+      <div style="background: rgba(255,255,255,0.03); border: 1px dashed var(--border); padding: 15px; border-radius: 8px; font-size: 0.75rem; color: #64748b;">
+        [ Interstitial Ad Unit ]
+      </div>
+      <div class="ad-countdown" id="gateTimer">4</div>
+      <button id="gateBtn" class="btn-action primary" style="display: none; width: 100%; padding: 10px;" onclick="resolveAdGate()">Continue to Copy</button>
+    </div>
+  </div>
+
+  <!-- Guide Modal -->
+  <div class="modal-overlay" id="guideModal">
+    <div class="modal-box">
+      <h3>Quick 10-Second Guide</h3>
+      <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.5;">
+        1. <b>Copy/Remix Prompt:</b> Tap Copy or Remix to tweak text inside the app.<br>
+        2. <b>Open Engine:</b> Use the Bing or Leonardo shortcut buttons.<br>
+        3. <b>Paste & Run:</b> Generate unlimited variations for free.
+      </p>
+      <button class="btn-close" onclick="closeModal('guideModal')">Got it</button>
+    </div>
+  </div>
+
+  <canvas id="cropCanvas" style="display:none;"></canvas>
+
+  <script>
+    let currentData = [];
+    let baseModalPrompt = "";
+    let copyCount = 0;
+    let pendingPromptToCopy = "";
+    let activeDownloadUrl = "";
+    let activeRatio = "original";
+
+    async function fetchPrompts(query) {
+      const grid = document.getElementById('artGrid');
+      grid.innerHTML = '<p style="grid-column: 1/-1; text-align:center; padding: 40px; color: var(--text-muted);">Loading trending art...</p>';
+      
+      try {
+        const res = await fetch(`https://lexica.art/api/v1/search?q=${encodeURIComponent(query)}`);
+        const data = await res.json();
+        currentData = data.images ? data.images.slice(0, 28) : [];
+        renderGrid(currentData);
+      } catch (err) {
+        grid.innerHTML = '<p style="grid-column: 1/-1; text-align:center; padding: 40px; color: #ef4444;">Failed to load data. Retry.</p>';
+      }
+    }
+
+    function renderGrid(items) {
+      const grid = document.getElementById('artGrid');
+      grid.innerHTML = "";
+
+      items.forEach((item, idx) => {
+        // Native Sponsor Injection every 7 cards
+        if (idx === 6 || idx === 14) {
+          const sponsor = document.createElement('div');
+          sponsor.className = 'sponsor-card';
+          sponsor.innerHTML = `
+            <h4>🚀 Create Unlimited Free AI Art</h4>
+            <p>Generate photos instantly without credit card using Copilot.</p>
+            <a class="btn-action primary" href="https://www.bing.com/images/create" target="_blank">Try Free Engine ↗</a>
+          `;
+          grid.appendChild(sponsor);
+        }
+
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <div class="card-img-wrap">
+            <img src="${item.srcSmall}" loading="lazy" alt="AI Art" onclick="openRemix(${idx})" />
+            <button class="badge-fav" onclick="toggleSave('${item.id}', ${idx})">⭐</button>
+          </div>
+          <div class="card-body">
+            <p class="prompt-text">${item.prompt}</p>
+            <div class="card-actions">
+              <button class="btn-action primary" onclick="handleCopyReq('${encodeURIComponent(item.prompt)}')">📋 Copy</button>
+              <button class="btn-action" onclick="openRemix(${idx})">✏️ Remix</button>
+            </div>
+            <button class="btn-action" style="width: 100%; margin-top: 4px;" onclick="openDownloadModal('${item.src}')">⬇ HD Resize & DL</button>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    // High Revenue: Copy Interstitial
+    function handleCopyReq(encodedText) {
+      const text = decodeURIComponent(encodedText);
+      copyCount++;
+      if (copyCount > 2) {
+        pendingPromptToCopy = text;
+        const modal = document.getElementById('adGateModal');
+        const timer = document.getElementById('gateTimer');
+        const btn = document.getElementById('gateBtn');
+        modal.classList.add('active');
+        btn.style.display = "none";
+        timer.style.display = "block";
+        let count = 4;
+        timer.innerText = count;
+
+        const interval = setInterval(() => {
+          count--;
+          timer.innerText = count;
+          if (count <= 0) {
+            clearInterval(interval);
+            timer.style.display = "none";
+            btn.style.display = "block";
+          }
+        }, 1000);
+      } else {
+        executeCopy(text);
+      }
+    }
+
+    function resolveAdGate() {
+      closeModal('adGateModal');
+      executeCopy(pendingPromptToCopy);
+      copyCount = 0; // Reset
+    }
+
+    function executeCopy(text) {
+      navigator.clipboard.writeText(text);
+      alert("Prompt copied to clipboard!");
+    }
+
+    // Client-Side Canvas Cropper / Downloader
+    function openDownloadModal(url) {
+      activeDownloadUrl = url;
+      const modal = document.getElementById('downloadModal');
+      const timer = document.getElementById('adTimer');
+      const btn = document.getElementById('finalDlBtn');
+      
+      modal.classList.add('active');
+      btn.style.display = "none";
+      timer.style.display = "block";
+      let count = 5;
+      timer.innerText = count;
+
+      const interval = setInterval(() => {
+        count--;
+        timer.innerText = count;
+        if (count <= 0) {
+          clearInterval(interval);
+          timer.style.display = "none";
+          btn.style.display = "block";
+        }
+      }, 1000);
+    }
+
+    function setRatio(ratio, btn) {
+      activeRatio = ratio;
+      document.querySelectorAll('.btn-crop').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    function executeDownload() {
+      if (activeRatio === 'original') {
+        window.open(activeDownloadUrl, '_blank');
+        closeModal('downloadModal');
+        return;
+      }
+
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.src = activeDownloadUrl;
+      img.onload = () => {
+        const canvas = document.getElementById('cropCanvas');
+        const ctx = canvas.getContext('2d');
+        let targetW = img.width;
+        let targetH = img.height;
+
+        if (activeRatio === '1:1') {
+          const size = Math.min(img.width, img.height);
+          canvas.width = size;
+          canvas.height = size;
+          ctx.drawImage(img, (img.width - size)/2, (img.height - size)/2, size, size, 0, 0, size, size);
+        } else if (activeRatio === '9:16') {
+          const targetWidth = img.height * (9/16);
+          canvas.width = targetWidth;
+          canvas.height = img.height;
+          ctx.drawImage(img, (img.width - targetWidth)/2, 0, targetWidth, img.height, 0, 0, targetWidth, img.height);
+        }
+
+        const link = document.createElement('a');
+        link.download = `PromptPix-${activeRatio}.jpg`;
+        link.href = canvas.toDataURL('image/jpeg', 0.95);
+        link.click();
+        closeModal('downloadModal');
+      };
+      img.onerror = () => {
+        window.open(activeDownloadUrl, '_blank');
+        closeModal('downloadModal');
+      };
+    }
+
+    // Vault Ad Unlock
+    function unlockVault() {
+      const btn = document.getElementById('vaultBtn');
+      btn.innerText = "Unlocking in 5s...";
+      btn.disabled = true;
+      setTimeout(() => {
+        document.getElementById('vaultText').style.filter = "none";
+        btn.innerText = "Unlocked! Click to Copy";
+        btn.onclick = () => {
+          navigator.clipboard.writeText(document.getElementById('vaultText').innerText);
+          alert("Secret prompt copied!");
+        };
+        btn.disabled = false;
+      }, 5000);
+    }
+
+    function filterCategory(btn, query) {
+      document.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('active'));
+      btn.classList.add('active');
+      fetchPrompts(query);
+    }
+
+    function handleSearch() {
+      const q = document.getElementById('searchInput').value.trim();
+      if(q) fetchPrompts(q);
+    }
+
+    function openRemix(idx) {
+      const item = currentData[idx];
+      baseModalPrompt = item.prompt;
+      document.getElementById('modalPrompt').value = baseModalPrompt;
+      document.getElementById('swapName').value = "";
+      document.getElementById('swapColor').value = "";
+      document.getElementById('editModal').classList.add('active');
+    }
+
+    function updateCustomPrompt() {
+      const name = document.getElementById('swapName').value.trim();
+      const color = document.getElementById('swapColor').value.trim();
+      let mod = baseModalPrompt;
+      if(name) mod = name + ", " + mod;
+      if(color) mod += ", featuring " + color;
+      document.getElementById('modalPrompt').value = mod;
+    }
+
+    function copyModalPrompt() {
+      const text = document.getElementById('modalPrompt').value;
+      handleCopyReq(encodeURIComponent(text));
+    }
+
+    function toggleSave(id, idx) {
+      let saved = JSON.parse(localStorage.getItem('saved_prompts') || '[]');
+      const exists = saved.find(x => x.id === id);
+      if(exists) {
+        saved = saved.filter(x => x.id !== id);
+      } else {
+        saved.push(currentData[idx]);
+      }
+      localStorage.setItem('saved_prompts', JSON.stringify(saved));
+    }
+
+    function showSaved() {
+      const saved = JSON.parse(localStorage.getItem('saved_prompts') || '[]');
+      if(saved.length === 0) { alert("No saved prompts yet."); return; }
+      currentData = saved;
+      renderGrid(saved);
+    }
+
+    function triggerSurprise() {
+      const terms = ["dark cyberpunk warrior", "hyperrealistic vintage street portrait", "cute pixar 3d animal", "studio lighting model portrait"];
+      fetchPrompts(terms[Math.floor(Math.random() * terms.length)]);
+    }
+
+    function openGuide() { document.getElementById('guideModal').classList.add('active'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+    fetchPrompts('trending realistic portrait');
+  </script>
+</body>
+</html>
